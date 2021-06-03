@@ -50,7 +50,7 @@ class Repo(object):
         """
         assert path.startswith('/')
         url = '/api2/repos/%s/dir/' % self.id
-        query = '?' + urlencode(dict(p=path))
+        query = '?' + urlencode(dict(p=path)) if path != '/' else ''
         resp = self.client.get(url + query)
         dir_id = resp.headers['oid']
         dir_json = resp.json()

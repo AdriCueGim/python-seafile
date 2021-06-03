@@ -189,7 +189,7 @@ class SeafDir(_SeafDirentBase):
             return self.upload(fp, name)
 
     def _get_upload_link(self):
-        url = '/api2/repos/%s/upload-link/' % self.repo.id
+        url = f'/api2/repos/{self.repo.id}/upload-link/{querystr(p=self.path) if self.path != "/" else ""}'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
 
@@ -238,7 +238,7 @@ class SeafFile(_SeafDirentBase):
             (self.repo.id[:6], self.path, self.size)
 
     def _get_download_link(self):
-        url = '/api2/repos/%s/file/' % self.repo.id + querystr(p=self.path)
+        url = f'/api2/repos/{self.repo.id}/file/{querystr(p=self.path) if self.path != "/" else ""}'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
 
