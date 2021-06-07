@@ -244,7 +244,7 @@ class SeafFile(_SeafDirentBase):
 
     def get_content(self):
         """Get the content of the file"""
-        url = self._get_download_link()
+        url = self.get_download_link()
         return self.client.get(url).content
 
     __repr__ = __str__
