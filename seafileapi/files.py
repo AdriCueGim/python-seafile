@@ -237,7 +237,7 @@ class SeafFile(_SeafDirentBase):
         return 'SeafFile[repo=%s,path=%s,size=%s]' % \
             (self.repo.id[:6], self.path, self.size)
 
-    def _get_download_link(self):
+    def get_download_link(self):
         url = f'/api2/repos/{self.repo.id}/file/{querystr(p=self.path) if self.path != "/" else ""}'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
