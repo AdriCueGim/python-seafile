@@ -83,7 +83,7 @@ class Repo(object):
         return self.get_file(posixpath.join(filepath, filename))
 
     def _get_upload_link(self):
-        url = f'/api2/repos/{self.repo.id}/upload-link/'
+        url = f'/api2/repos/{self.id}/upload-link/'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
 
