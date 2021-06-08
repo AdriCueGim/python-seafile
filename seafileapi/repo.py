@@ -1,3 +1,6 @@
+import io
+import posixpath
+import re
 from urllib.parse import urlencode
 from seafileapi.files import SeafDir, SeafFile
 from seafileapi.utils import raise_does_not_exist
@@ -58,6 +61,32 @@ class Repo(object):
         dir.load_entries(dir_json)
         return dir
 
+    def upload_file(self, fileobj, filename, filepath):
+        """Upload a file to this repo in the specified path.
+
+        :param:fileobj :class:`File` like object
+        :param:filename The name of the file
+        :param:filepath The path where the file will be uploaded, if this sub-folder
+                        does not exist, Seafile will create it recursively
+
+        Return a :class:`SeafFile` object of the newly uploaded file.
+        """
+        if isinstance(fileobj, str):
+            fileobj = io.BytesIO(fileobj)
+        upload_url = self._get_upload_link()
+        files = {
+            'file': (filename, fileobj),
+            'parent_dir': '/',
+            'relative_path': filepath
+        }
+        self.client.post(upload_url, files=files)
+        return self.get_file(posixpath.join(filepath, filename))
+
+    def _get_upload_link(self):
+        url = f'/api2/repos/{self.repo.id}/upload-link/'
+        resp = self.client.get(url)
+        return re.match(r'"(.*)"', resp.text).group(1)
+
     def delete(self):
         """Remove this repo. Only the repo owner can do this"""
         self.client.delete('/api2/repos/' + self.id)
@@ -87,6 +116,7 @@ class Repo(object):
 
     def restore(self, commit_id):
         pass
+
 
 class RepoRevision(object):
     def __init__(self, client, repo, commit_id):
