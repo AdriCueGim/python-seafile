@@ -80,7 +80,7 @@ class Repo(object):
             'relative_path': filepath
         }
         self.client.post(upload_url, files=files)
-        return self.get_file(posixpath.join(filepath, filename))
+        return self.get_file(posixpath.join('/' + filepath, filename))
 
     def _get_upload_link(self):
         url = f'/api2/repos/{self.id}/upload-link/'
