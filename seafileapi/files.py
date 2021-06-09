@@ -242,6 +242,21 @@ class SeafFile(_SeafDirentBase):
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
 
+    def post_share_link(self):
+        url = f'/api/v2.1/share-links/'
+        resp = self.client.post(
+            url,
+            json={
+                'repo_id': self.repo.id,
+                'path': self.path
+            })
+        return resp.json()['link']
+
+    def get_share_link(self):
+        url = f'/api/v2.1/share-links/?repo_id={self.repo.id}&path={self.path}'
+        resp = self.client.get(url)
+        return re.match(r'"(.*)"', resp.text).group(1)
+
     def get_content(self):
         """Get the content of the file"""
         url = self.get_download_link()

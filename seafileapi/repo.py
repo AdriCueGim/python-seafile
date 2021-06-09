@@ -73,14 +73,15 @@ class Repo(object):
         """
         if isinstance(fileobj, str):
             fileobj = io.BytesIO(fileobj)
-        upload_url = self._get_upload_link()
+        upload_url = self._get_upload_link() + '?ret-json=1'
         files = {
             'file': (filename, fileobj),
             'parent_dir': '/',
             'relative_path': filepath
         }
-        self.client.post(upload_url, files=files)
-        return self.get_file(posixpath.join('/' + filepath, filename))
+        resp = self.client.post(upload_url, files=files)
+        json_response = resp.json()
+        return self.get_file(posixpath.join('/' + filepath, json_response[0]['name']))
 
     def _get_upload_link(self):
         url = f'/api2/repos/{self.id}/upload-link/'
