@@ -2,9 +2,11 @@ import io
 import os
 import posixpath
 import re
+
 from seafileapi.utils import querystr
 
 ZERO_OBJ_ID = '0000000000000000000000000000000000000000'
+
 
 class _SeafDirentBase(object):
     """Base class for :class:`SeafFile` and :class:`SeafDir`.
@@ -64,7 +66,7 @@ class _SeafDirentBase(object):
         dst_repo_id = dst_repo_id
         dst_parent_dir = dst_dir
         operation = operation
-        dirent_type =  dirent_type
+        dirent_type = dirent_type
         postdata = {'src_repo_id': src_repo_id, 'src_parent_dir': src_parent_dir,
                     'src_dirent_name': src_dirent_name, 'dst_repo_id': dst_repo_id,
                     'dst_parent_dir': dst_parent_dir, 'operation': operation,
@@ -101,8 +103,27 @@ class _SeafDirentBase(object):
                 self.__dict__[key] = new_dirent.__dict__[key]
         return succeeded
 
+    def post_share_link(self):
+        url = f'/api/v2.1/share-links/'
+        resp = self.client.post(
+            url,
+            json={
+                'repo_id': self.repo.id,
+                'path': self.path
+            })
+        return resp.json()['link']
+
     def get_share_link(self):
-        pass
+        url = f'/api/v2.1/share-links/?repo_id={self.repo.id}&path={self.path}'
+        resp = self.client.get(url)
+        return resp.json()[0]['link']
+
+    def delete_share_link(self):
+        token = self.get_share_link().split('/')[4]
+        url = f'/api/v2.1/share-links/{token}/'
+        resp = self.client.delete(url)
+        return resp.json().get('success')
+
 
 class SeafDir(_SeafDirentBase):
     isdir = True
@@ -222,9 +243,10 @@ class SeafDir(_SeafDirentBase):
 
     def __str__(self):
         return 'SeafDir[repo=%s,path=%s,entries=%s]' % \
-            (self.repo.id[:6], self.path, self.num_entries)
+               (self.repo.id[:6], self.path, self.num_entries)
 
     __repr__ = __str__
+
 
 class SeafFile(_SeafDirentBase):
     isdir = False
@@ -235,25 +257,10 @@ class SeafFile(_SeafDirentBase):
 
     def __str__(self):
         return 'SeafFile[repo=%s,path=%s,size=%s]' % \
-            (self.repo.id[:6], self.path, self.size)
+               (self.repo.id[:6], self.path, self.size)
 
     def get_download_link(self):
         url = f'/api2/repos/{self.repo.id}/file/{querystr(p=self.path) if self.path != "/" else ""}'
-        resp = self.client.get(url)
-        return re.match(r'"(.*)"', resp.text).group(1)
-
-    def post_share_link(self):
-        url = f'/api/v2.1/share-links/'
-        resp = self.client.post(
-            url,
-            json={
-                'repo_id': self.repo.id,
-                'path': self.path
-            })
-        return resp.json()['link']
-
-    def get_share_link(self):
-        url = f'/api/v2.1/share-links/?repo_id={self.repo.id}&path={self.path}'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
 

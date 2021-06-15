@@ -1,14 +1,17 @@
 import io
 import posixpath
 import re
+import validators
 from urllib.parse import urlencode
 from seafileapi.files import SeafDir, SeafFile
 from seafileapi.utils import raise_does_not_exist
+
 
 class Repo(object):
     """
     A seafile library
     """
+
     def __init__(self, client, repo_id, repo_name,
                  encrypted, owner, perm):
         self.client = client
@@ -87,6 +90,21 @@ class Repo(object):
         url = f'/api2/repos/{self.id}/upload-link/'
         resp = self.client.get(url)
         return re.match(r'"(.*)"', resp.text).group(1)
+
+    def get_share_link_details(self, token: str):
+        url = f'/api/v2.1/share-links/{token}/'
+        resp = self.client.get(url)
+        return resp.json()
+
+    def get_element_by_share_link(self, share_link: str):
+        splitted_link = share_link.split('/')
+        if validators.url(share_link) and len(splitted_link) >= 5:
+            token = splitted_link[4]
+            share_link_details = self.get_share_link_details(token)
+            path = share_link_details.get('path')
+            return self.get_dir(path) if share_link_details.get('is_dir') else self.get_file(path)
+        else:
+            raise ValueError('Invalid share link')
 
     def delete(self):
         """Remove this repo. Only the repo owner can do this"""
